@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
+//	"strings"
 
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textarea"
@@ -12,12 +12,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type model struct {
-	viewport 	viewport.Model
-	messages	[]string
-	textarea	textarea.Model
-	senderStyle	lipgloss.Style
-	err			error
+type Model struct {
+	viewport 		viewport.Model
+	messages		[]string
+	textarea		textarea.Model
+	senderStyle		lipgloss.Style
+	responderStyle	lipgloss.Style
+	err				error
 }
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 	}
 }
 
-func initalModel() model {
+func initalModel() Model {
 	ta := textarea.New()
 	ta.Placeholder = "Type a messge..."
 	ta.Focus()
@@ -42,20 +43,21 @@ func initalModel() model {
 	vp := viewport.New(100, 5)
 	vp.SetContent(`You are in the chat room. Type a message and press Enter to send.`)
 	ta.KeyMap.InsertNewline.SetEnabled(false)
-	return model{
+	return Model{
 		textarea:		ta,
 		messages:		[]string{},
 		viewport:		vp,
 		senderStyle: 	lipgloss.NewStyle().Foreground(lipgloss.Color("5")),
+		responderStyle:	lipgloss.NewStyle().Foreground(lipgloss.Color("1")),
 		err:			nil,
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m Model) Init() tea.Cmd {
 	return textarea.Blink
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
 	case tea.KeyMsg:
@@ -68,10 +70,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if v == "" {
 				return m, nil
 			}
-			m.messages = append(m.messages, m.senderStyle.Render("You: ")+v)
-			m.viewport.SetContent(strings.Join(m.messages, "\n"))
-			m.textarea.Reset()
-			m.viewport.GotoBottom()
+			m.Send(v)
+			m.Reply()
 			return m, nil
 		default:
 			var cmd tea.Cmd
@@ -88,7 +88,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
-func (m model) View() string {
+func (m Model) View() string {
 	return fmt.Sprintf(
 		"%s\n\n%s",
 		m.viewport.View(),
