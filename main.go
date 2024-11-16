@@ -22,9 +22,15 @@ type Model struct {
 }
 
 func main() {
+	go func() {
+		err := serveModel()
+		if err != nil {
+			fmt.Printf("Error when serving: %v\n", err)
+		}
+	}()
 	p := tea.NewProgram(initalModel())
 	if _, err := p.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Oops: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
 }
 
@@ -70,8 +76,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if v == "" {
 				return m, nil
 			}
-			m.Send(v)
-			m.Reply()
+			v, err := m.Send(v)
+			err = m.Reply(v)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			}
+			m.Reply(v)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			}
+
 			return m, nil
 		default:
 			var cmd tea.Cmd
