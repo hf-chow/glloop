@@ -81,11 +81,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			}
-			m.Reply(v)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			}
-
 			return m, nil
 		default:
 			var cmd tea.Cmd
