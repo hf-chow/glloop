@@ -5,13 +5,25 @@ import (
 	"os/exec"
 )
 
-const PORT = 11434
-var ENDPOINT string = fmt.Sprintf("http://localhost:%d/api/", int(PORT))
-
 func serveModel() error{
-	cmd := exec.Command("bash", "-c",  "ollama serve")
+	err := brewStopOllama()
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command("bash", "-c", "ollama serve")
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func brewStopOllama() error{
+	cmd := exec.Command("bash", "-c", "brew services stop ollama" )
 	err := cmd.Run()
 	if err != nil {
+		fmt.Printf("Error when stopping: %v", err)
 		return err
 	}
 	return nil
