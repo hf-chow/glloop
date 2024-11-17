@@ -36,13 +36,13 @@ func (m *Model) setAndGo() {
 	m.viewport.GotoBottom()
 }
 
-func (m *Model) Send(v string) (string, error) {
+func (m *Model) Send(v string, requestCh chan string) {
 	m.messages = append(m.messages, m.senderStyle.Render("You: ") + v)
 	m.setAndGo()
-	return v, nil
+	requestCh <- v  
 }
 
-func (m *Model) Reply(msg string) error {
+func (m *Model) Reply(msg string, responseCh chan string) {
 	postBody, err := json.Marshal(Request{
 		Model: "llama3.2",
 		Prompt: msg,
@@ -56,20 +56,20 @@ func (m *Model) Reply(msg string) error {
 		"http://localhost:11434/api/generate", "application/json", buf,
 	)
 	if err != nil {
-		return err
+		fmt.Printf("Error marshalling request: %v\n", err)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		fmt.Printf("Error reading response: %v\n", err)
 	}
+
 	var modelResp Response
 	err = json.Unmarshal(body, &modelResp)
 	if err != nil {
-		return err
+		fmt.Printf("Error unmarshalling response: %v\n", err)
 	}
+
 	m.messages = append(m.messages, m.responderStyle.Render("Bot: ")+modelResp.Response)
 	m.setAndGo()
-
-	return nil
 }

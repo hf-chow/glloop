@@ -18,6 +18,8 @@ type Model struct {
 	textarea		textarea.Model
 	senderStyle		lipgloss.Style
 	responderStyle	lipgloss.Style
+	requestCh		chan string
+	responseCh		chan string
 	err				error
 }
 
@@ -28,6 +30,7 @@ func main() {
 			fmt.Printf("Error when serving: %v\n", err)
 		}
 	}()
+
 	p := tea.NewProgram(initalModel())
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -35,6 +38,9 @@ func main() {
 }
 
 func initalModel() Model {
+	requestCh := make(chan string)
+	responseCh := make(chan string)
+
 	ta := textarea.New()
 	ta.Placeholder = "Type a messge..."
 	ta.Focus()
@@ -54,6 +60,8 @@ func initalModel() Model {
 		viewport:		vp,
 		senderStyle: 	lipgloss.NewStyle().Foreground(lipgloss.Color("5")),
 		responderStyle:	lipgloss.NewStyle().Foreground(lipgloss.Color("1")),
+		requestCh: 		requestCh,
+		responseCh: 	responseCh,
 		err:			nil,
 	}
 }
@@ -75,11 +83,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if v == "" {
 				return m, nil
 			}
-			v, err := m.Send(v)
-			err = m.Reply(v)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			}
+			go m.Send(v, m.requestCh)
+			go m.Reply(v, m.responseCh)
 			return m, nil
 		default:
 			var cmd tea.Cmd
