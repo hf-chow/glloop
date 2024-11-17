@@ -40,8 +40,7 @@ func initalModel() Model {
 	ta.Focus()
 
 	ta.Prompt = "| "
-	ta.CharLimit = 280
-	ta.SetWidth(30)
+	ta.SetWidth(100)
 	ta.SetHeight(3)
 
 	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
