@@ -39,10 +39,25 @@ func (m *Model) setAndGo() {
 func (m *Model) Send(v string, requestCh chan string) {
 	m.messages = append(m.messages, m.senderStyle.Render("You: ") + v)
 	m.setAndGo()
-	requestCh <- v  
 }
 
-func (m *Model) Reply(msg string, responseCh chan string) {
+func (m *Model) SysReply(msg string) {
+	go m.fetchReplyTest(msg)
+	m.messages = append(m.messages, m.SystemStyle.Render("Standby..."))
+	m.setAndGo()
+}
+
+func (m *Model) Blink() {
+	// For testing only
+	m.messages = append(m.messages, m.SystemStyle.Render("Blink..."))
+	m.setAndGo()
+}
+
+func (m *Model) fetchReplyTest(msg string) {
+	m.responseCh <- msg
+}
+
+func (m *Model) fetchReply(msg string) {
 	postBody, err := json.Marshal(Request{
 		Model: "llama3.2",
 		Prompt: msg,
@@ -70,6 +85,11 @@ func (m *Model) Reply(msg string, responseCh chan string) {
 		fmt.Printf("Error unmarshalling response: %v\n", err)
 	}
 
-	m.messages = append(m.messages, m.responderStyle.Render("Bot: ")+modelResp.Response)
+	m.responseCh <- modelResp.Response
+}
+
+func (m *Model) Reply() {
+	response :=  <- m.responseCh
+	m.messages = append(m.messages, m.responderStyle.Render("Bot: ")+response)
 	m.setAndGo()
 }

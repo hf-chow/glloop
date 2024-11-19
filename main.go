@@ -18,6 +18,7 @@ type Model struct {
 	textarea		textarea.Model
 	senderStyle		lipgloss.Style
 	responderStyle	lipgloss.Style
+	SystemStyle		lipgloss.Style
 	requestCh		chan string
 	responseCh		chan string
 	err				error
@@ -38,8 +39,8 @@ func main() {
 }
 
 func initalModel() Model {
-	requestCh := make(chan string)
-	responseCh := make(chan string)
+	requestCh := make(chan string, 5)
+	responseCh := make(chan string, 5)
 
 	ta := textarea.New()
 	ta.Placeholder = "Type a messge..."
@@ -60,6 +61,7 @@ func initalModel() Model {
 		viewport:		vp,
 		senderStyle: 	lipgloss.NewStyle().Foreground(lipgloss.Color("5")),
 		responderStyle:	lipgloss.NewStyle().Foreground(lipgloss.Color("1")),
+		SystemStyle:	lipgloss.NewStyle().Foreground(lipgloss.Color("2")),
 		requestCh: 		requestCh,
 		responseCh: 	responseCh,
 		err:			nil,
@@ -83,8 +85,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if v == "" {
 				return m, nil
 			}
-			go m.Send(v, m.requestCh)
-			go m.Reply(v, m.responseCh)
+			m.Send(v, m.requestCh)
+			m.SysReply(v)
 			return m, nil
 		default:
 			var cmd tea.Cmd
@@ -94,6 +96,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case cursor.BlinkMsg:
 		var cmd tea.Cmd
 		m.textarea, cmd = m.textarea.Update(msg)
+		go m.Reply()
 		return m, cmd
 	default:
 		return m, nil
