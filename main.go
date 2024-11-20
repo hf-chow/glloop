@@ -39,8 +39,8 @@ func main() {
 }
 
 func initalModel() Model {
-	requestCh := make(chan string, 5)
-	responseCh := make(chan string, 5)
+	requestCh := make(chan string)
+	responseCh := make(chan string)
 
 	ta := textarea.New()
 	ta.Placeholder = "Type a messge..."
@@ -85,8 +85,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if v == "" {
 				return m, nil
 			}
-			m.Send(v, m.requestCh)
-			m.SysReply(v)
+			go m.Send(v)
+			m.SysReply()
 			return m, nil
 		default:
 			var cmd tea.Cmd

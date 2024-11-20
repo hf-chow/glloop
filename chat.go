@@ -36,13 +36,13 @@ func (m *Model) setAndGo() {
 	m.viewport.GotoBottom()
 }
 
-func (m *Model) Send(v string, requestCh chan string) {
+func (m *Model) Send(v string) {
 	m.messages = append(m.messages, m.senderStyle.Render("You: ") + v)
 	m.setAndGo()
+	m.requestCh <- v
 }
 
-func (m *Model) SysReply(msg string) {
-	go m.fetchReplyTest(msg)
+func (m *Model) SysReply() {
 	m.messages = append(m.messages, m.SystemStyle.Render("Standby..."))
 	m.setAndGo()
 }
@@ -57,7 +57,8 @@ func (m *Model) fetchReplyTest(msg string) {
 	m.responseCh <- msg
 }
 
-func (m *Model) fetchReply(msg string) {
+func (m *Model) fetchReply() {
+	msg := <- m.requestCh
 	postBody, err := json.Marshal(Request{
 		Model: "llama3.2",
 		Prompt: msg,
