@@ -39,7 +39,6 @@ func (m *Model) setAndGo() {
 func (m *Model) Send(v string) {
 	m.messages = append(m.messages, m.senderStyle.Render("You: ") + v)
 	m.setAndGo()
-	m.requestCh <- v
 }
 
 func (m *Model) SysReply() {
@@ -53,11 +52,12 @@ func (m *Model) Blink() {
 	m.setAndGo()
 }
 
-func (m *Model) fetchReplyTest(msg string) {
-	m.responseCh <- msg
+func (m *Model) SendRequest(v string) {
+	m.requestCh <- v
+	fmt.Printf("%s", v)
 }
 
-func (m *Model) fetchReply() {
+func (m *Model) FetchReply() {
 	msg := <- m.requestCh
 	postBody, err := json.Marshal(Request{
 		Model: "llama3.2",
@@ -91,6 +91,7 @@ func (m *Model) fetchReply() {
 
 func (m *Model) Reply() {
 	response :=  <- m.responseCh
+	fmt.Printf("%s", response)
 	m.messages = append(m.messages, m.responderStyle.Render("Bot: ")+response)
 	m.setAndGo()
 }
