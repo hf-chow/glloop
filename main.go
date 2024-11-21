@@ -97,12 +97,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case cursor.BlinkMsg:
 		var cmd tea.Cmd
 		m.textarea, cmd = m.textarea.Update(msg)
-		go m.FetchReply()
-		go m.Reply()
 		return m, cmd
 	default:
+		go m.FetchReply()
+		go m.Reply()
 		return m, nil
-
 	}
 }
 
