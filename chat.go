@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type Request struct {
@@ -29,6 +31,7 @@ type Response struct {
 	Eval_duration			int		`json:"eval_duration"`
 }
 
+type BotResponseMsg string
 
 func (m *Model) setAndGo() {
 	m.viewport.SetContent(strings.Join(m.messages, "\n"))
@@ -38,6 +41,7 @@ func (m *Model) setAndGo() {
 
 func (m *Model) Send(v string) {
 	m.messages = append(m.messages, m.senderStyle.Render("You: ") + v)
+	go m.sendRequest(v)
 	m.setAndGo()
 }
 
@@ -52,12 +56,11 @@ func (m *Model) Blink() {
 	m.setAndGo()
 }
 
-func (m *Model) SendRequest(v string) {
+func (m *Model) sendRequest(v string) {
 	m.requestCh <- v
-	fmt.Printf("%s", v)
 }
 
-func (m *Model) FetchReply() {
+func (m *Model) fetchReply() {
 	msg := <- m.requestCh
 	postBody, err := json.Marshal(Request{
 		Model: "llama3.2",
@@ -89,9 +92,22 @@ func (m *Model) FetchReply() {
 	m.responseCh <- modelResp.Response
 }
 
-func (m *Model) Reply() {
+func (m *Model) reply() {
 	response :=  <- m.responseCh
-	fmt.Printf("%s", response)
+// 	fmt.Printf("Got reply: %s", response)
 	m.messages = append(m.messages, m.responderStyle.Render("Bot: ")+response)
 	m.setAndGo()
+}
+
+func (m *Model) BotReply() {
+	go m.fetchReply()
+	go m.reply()
+}
+
+func (m *Model) WaitForResponse() tea.Cmd {
+	return func() tea.Msg {
+		response := <- m.responseCh
+//		fmt.Println("Got response:", response)
+		return BotResponseMsg(response)
+	}
 }

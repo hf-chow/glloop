@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-//	"strings"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textarea"
@@ -39,8 +39,8 @@ func main() {
 }
 
 func initalModel() Model {
-	requestCh := make(chan string)
-	responseCh := make(chan string)
+	requestCh := make(chan string, 1)
+	responseCh := make(chan string, 1)
 
 	ta := textarea.New()
 	ta.Placeholder = "Type a messge..."
@@ -48,11 +48,11 @@ func initalModel() Model {
 
 	ta.Prompt = "| "
 	ta.SetWidth(100)
-	ta.SetHeight(3)
+	ta.SetHeight(5)
 
 	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
 	ta.ShowLineNumbers = false
-	vp := viewport.New(100, 5)
+	vp := viewport.New(100, 20)
 	vp.SetContent(`You are in the chat room. Type a message and press Enter to send.`)
 	ta.KeyMap.InsertNewline.SetEnabled(false)
 	return Model{
@@ -73,6 +73,7 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+//	fmt.Printf("Received message type: %T\n", msg)
 	switch msg := msg.(type) {
 
 	case tea.KeyMsg:
@@ -86,9 +87,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			m.Send(v)
-			go m.SendRequest(v)
-			m.SysReply()
-			return m, nil
+			m.textarea.Reset()
+			return m, m.WaitForResponse()
 		default:
 			var cmd tea.Cmd
 			m.textarea, cmd = m.textarea.Update(msg)
@@ -96,11 +96,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case cursor.BlinkMsg:
 		var cmd tea.Cmd
+		go m.fetchReply()
 		m.textarea, cmd = m.textarea.Update(msg)
 		return m, cmd
+	case BotResponseMsg:
+		m.messages = append(m.messages, m.responderStyle.Render("Bot: ") + string(msg))
+		m.viewport.SetContent(strings.Join(m.messages, "\n"))
+		m.textarea.Reset()
+		m.viewport.GotoBottom()
+		return m, nil
 	default:
-		go m.FetchReply()
-		go m.Reply()
 		return m, nil
 	}
 }
