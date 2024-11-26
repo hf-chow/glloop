@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textarea"
@@ -100,10 +99,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.textarea, cmd = m.textarea.Update(msg)
 		return m, cmd
 	case BotResponseMsg:
-		m.messages = append(m.messages, m.responderStyle.Render("Bot: ") + string(msg))
-		m.viewport.SetContent(strings.Join(m.messages, "\n"))
-		m.textarea.Reset()
-		m.viewport.GotoBottom()
+		m.BotReply(msg)
 		return m, nil
 	default:
 		return m, nil

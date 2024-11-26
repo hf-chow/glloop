@@ -99,9 +99,11 @@ func (m *Model) reply() {
 	m.setAndGo()
 }
 
-func (m *Model) BotReply() {
-	go m.fetchReply()
-	go m.reply()
+func (m *Model) BotReply(msg BotResponseMsg) {
+	m.messages = append(m.messages, m.responderStyle.Render("Bot: ") + string(msg))
+	m.viewport.SetContent(strings.Join(m.messages, "\n"))
+	m.textarea.Reset()
+	m.viewport.GotoBottom()
 }
 
 func (m *Model) WaitForResponse() tea.Cmd {
