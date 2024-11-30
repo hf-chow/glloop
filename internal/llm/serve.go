@@ -5,7 +5,7 @@ import (
 	"os/exec"
 )
 
-func serveModel() error{
+func ServeModel() error{
 	err := brewStopOllama()
 	if err != nil {
 		return err

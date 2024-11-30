@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	llm "github.com/hf-chow/glloop/internal/llm"
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -25,7 +26,7 @@ type Model struct {
 
 func main() {
 	go func() {
-		err := serveModel()
+		err := llm.ServeModel()
 		if err != nil {
 			fmt.Printf("Error when serving: %v\n", err)
 		}
@@ -51,7 +52,7 @@ func initalModel() Model {
 
 	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
 	ta.ShowLineNumbers = false
-	vp := viewport.New(200, 20)
+	vp := viewport.New(100, 10)
 	vp.SetContent(`You are in the chat room. Type a message and press Enter to send.`)
 	ta.KeyMap.InsertNewline.SetEnabled(false)
 	return Model{
