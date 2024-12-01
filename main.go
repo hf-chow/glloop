@@ -21,6 +21,7 @@ type Model struct {
 	SystemStyle		lipgloss.Style
 	requestCh		chan string
 	responseCh		chan string
+	username		string
 	err				error
 }
 
@@ -32,13 +33,23 @@ func main() {
 		}
 	}()
 
-	p := tea.NewProgram(initalModel())
+	username := login()
+
+	p := tea.NewProgram(initalModel(username))
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
 }
 
-func initalModel() Model {
+func login() string{
+	fmt.Println("Enter your username: ")
+	var username string
+	fmt.Scanln(&username)
+
+	return username
+}
+
+func initalModel(username string) Model {
 	requestCh := make(chan string, 1)
 	responseCh := make(chan string, 1)
 
@@ -64,6 +75,7 @@ func initalModel() Model {
 		SystemStyle:	lipgloss.NewStyle().Foreground(lipgloss.Color("2")),
 		requestCh: 		requestCh,
 		responseCh: 	responseCh,
+		username: 		username,
 		err:			nil,
 	}
 }

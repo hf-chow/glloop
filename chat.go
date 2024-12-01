@@ -40,7 +40,9 @@ func (m *Model) setAndGo() {
 }
 
 func (m *Model) Send(v string) {
-	m.messages = append(m.messages, m.senderStyle.Render("You: ") + v)
+	m.messages = append(
+		m.messages, m.senderStyle.Render(fmt.Sprintf(m.username) +": ") + v,
+	)
 	go m.sendRequest(v)
 	m.setAndGo()
 }
