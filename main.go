@@ -1,15 +1,22 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
+	"log"
 	"os"
+	"time"
 
-	llm "github.com/hf-chow/glloop/internal/llm"
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/google/uuid"
+	"github.com/hf-chow/glloop/internal/database"
+	db "github.com/hf-chow/glloop/internal/database"
+	llm "github.com/hf-chow/glloop/internal/llm"
 )
 
 type Model struct {
@@ -25,6 +32,11 @@ type Model struct {
 	err				error
 }
 
+type State struct {
+	Config	*Config
+	DB 		*database.Queries
+}
+
 func main() {
 	go func() {
 		err := llm.ServeModel()
@@ -33,7 +45,12 @@ func main() {
 		}
 	}()
 
-	username := login()
+	db, err := sql.Open("postgres", state.Config.DBURL)
+	if err != nil {
+		log.Fatal("fail to connect to DB")
+	}
+
+	username := login(*state.DB)
 
 	p := tea.NewProgram(initalModel(username))
 	if _, err := p.Run(); err != nil {
@@ -41,10 +58,19 @@ func main() {
 	}
 }
 
-func login() string{
+func login(q db.Queries) string{
 	fmt.Println("Enter your username: ")
 	var username string
 	fmt.Scanln(&username)
+
+	userArgs := db.CreateUserParams{
+		ID: 		uuid.New(),
+		CreatedAt:	time.Now(),
+		UpdatedAt:	time.Now(),
+		Name:		username,
+	}
+
+	q.CreateUser(context.Background(), userArgs)
 
 	return username
 }
