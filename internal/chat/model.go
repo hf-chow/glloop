@@ -24,7 +24,7 @@ type Model struct {
 }
 
 
-func initModel(username string) Model {
+func InitModel(username string) Model {
 	requestCh := make(chan string, 1)
 	responseCh := make(chan string, 1)
 

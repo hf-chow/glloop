@@ -9,10 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/charmbracelet/bubbles/textarea"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
 	"github.com/hf-chow/glloop/internal/database"
 	db "github.com/hf-chow/glloop/internal/database"
@@ -20,19 +17,6 @@ import (
 	chat "github.com/hf-chow/glloop/internal/chat"
 
 )
-
-type Model struct {
-	viewport 		viewport.Model
-	messages		[]string
-	textarea		textarea.Model
-	senderStyle		lipgloss.Style
-	responderStyle	lipgloss.Style
-	SystemStyle		lipgloss.Style
-	requestCh		chan string
-	responseCh		chan string
-	username		string
-	err				error
-}
 
 type State struct {
 	Config	*Config
@@ -63,7 +47,7 @@ func main() {
 
 	username := login(*state.DB)
 
-	p := tea.NewProgram(chat.initModel(username))
+	p := tea.NewProgram(chat.InitModel(username))
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
