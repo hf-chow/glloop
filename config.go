@@ -22,7 +22,7 @@ func getConfigPath() (string, error) {
 	return path, nil
 }
 
-func readConfig() (Config, error) {
+func ReadConfig() (Config, error) {
 	filePath, err := getConfigPath()
 	if err != nil {
 		return Config{}, err

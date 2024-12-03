@@ -1,5 +1,6 @@
 package main
 
+import _ "github.com/lib/pq"
 import (
 	"context"
 	"database/sql"
@@ -41,14 +42,23 @@ func main() {
 	go func() {
 		err := llm.ServeModel()
 		if err != nil {
-			fmt.Printf("Error when serving: %v\n", err)
+			fmt.Printf("error when serving: %v\n", err)
 		}
 	}()
 
-	db, err := sql.Open("postgres", state.Config.DBURL)
+	cfg, err := ReadConfig()
+	if err != nil {
+		fmt.Printf("error when reading config: %v\n", err)
+	}
+	state := &State{Config: &cfg}
+	fmt.Printf("%s\n", cfg.DBURL)
+
+	db, err := sql.Open("postgres", cfg.DBURL)
 	if err != nil {
 		log.Fatal("fail to connect to DB")
 	}
+	dbQueries := database.New(db)
+	state.DB = dbQueries
 
 	username := login(*state.DB)
 
