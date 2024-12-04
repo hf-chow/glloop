@@ -29,12 +29,12 @@ type Model struct {
 	requestCh		chan string
 	responseCh		chan string
 	CurrentUser		string
-	ModelState		State
+	ModelState		*State
 	err				error
 }
 
 
-func InitModel(username string) Model {
+func InitModel(username string, s *State) Model {
 	requestCh := make(chan string, 1)
 	responseCh := make(chan string, 1)
 
@@ -61,6 +61,7 @@ func InitModel(username string) Model {
 		requestCh: 		requestCh,
 		responseCh: 	responseCh,
 		CurrentUser: 	username,
+		ModelState: 	s,
 		err:			nil,
 	}
 }

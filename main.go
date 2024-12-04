@@ -14,7 +14,7 @@ import (
 	db "github.com/hf-chow/glloop/internal/database"
 	llm "github.com/hf-chow/glloop/internal/llm"
 	chat "github.com/hf-chow/glloop/internal/chat"
-
+	config "github.com/hf-chow/glloop/internal/config"
 )
 
 func main() {
@@ -25,12 +25,11 @@ func main() {
 		}
 	}()
 
-	cfg, err := ReadConfig()
+	cfg, err := config.ReadConfig()
 	if err != nil {
 		fmt.Printf("error when reading config: %v\n", err)
 	}
 	state := &chat.State{Config: &cfg}
-	fmt.Printf("%s\n", cfg.DBURL)
 
 	dbtx, err := sql.Open("postgres", cfg.DBURL)
 	if err != nil {
@@ -41,7 +40,7 @@ func main() {
 
 	username := login(*state.DB)
 
-	p := tea.NewProgram(chat.InitModel(username))
+	p := tea.NewProgram(chat.InitModel(username, state))
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
