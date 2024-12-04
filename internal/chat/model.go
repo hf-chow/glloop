@@ -8,7 +8,16 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/hf-chow/glloop/internal/config"
+	db "github.com/hf-chow/glloop/internal/database"
+
 )
+
+type State struct {
+	Config	*config.Config
+	DB 		*db.Queries
+}
+
 
 type Model struct {
 	viewport 		viewport.Model
@@ -19,7 +28,8 @@ type Model struct {
 	SystemStyle		lipgloss.Style
 	requestCh		chan string
 	responseCh		chan string
-	username		string
+	CurrentUser		string
+	ModelState		State
 	err				error
 }
 
@@ -50,7 +60,7 @@ func InitModel(username string) Model {
 		SystemStyle:	lipgloss.NewStyle().Foreground(lipgloss.Color("2")),
 		requestCh: 		requestCh,
 		responseCh: 	responseCh,
-		username: 		username,
+		CurrentUser: 	username,
 		err:			nil,
 	}
 }

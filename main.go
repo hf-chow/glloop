@@ -11,17 +11,11 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
-	"github.com/hf-chow/glloop/internal/database"
 	db "github.com/hf-chow/glloop/internal/database"
 	llm "github.com/hf-chow/glloop/internal/llm"
 	chat "github.com/hf-chow/glloop/internal/chat"
 
 )
-
-type State struct {
-	Config	*Config
-	DB 		*database.Queries
-}
 
 func main() {
 	go func() {
@@ -35,14 +29,14 @@ func main() {
 	if err != nil {
 		fmt.Printf("error when reading config: %v\n", err)
 	}
-	state := &State{Config: &cfg}
+	state := &chat.State{Config: &cfg}
 	fmt.Printf("%s\n", cfg.DBURL)
 
-	db, err := sql.Open("postgres", cfg.DBURL)
+	dbtx, err := sql.Open("postgres", cfg.DBURL)
 	if err != nil {
 		log.Fatal("fail to connect to DB")
 	}
-	dbQueries := database.New(db)
+	dbQueries := db.New(dbtx)
 	state.DB = dbQueries
 
 	username := login(*state.DB)

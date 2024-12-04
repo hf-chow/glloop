@@ -2,13 +2,17 @@ package chat
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/google/uuid"
+	db "github.com/hf-chow/glloop/internal/database"
 )
 
 type Request struct {
@@ -41,7 +45,7 @@ func (m *Model) setAndGo() {
 
 func (m *Model) Send(v string) {
 	m.messages = append(
-		m.messages, m.senderStyle.Render(fmt.Sprintf(m.username) +": ") + v,
+		m.messages, m.senderStyle.Render(fmt.Sprintf(m.CurrentUser) +": ") + v,
 	)
 	go m.sendRequest(v)
 	m.setAndGo()
@@ -89,6 +93,20 @@ func (m *Model) fetchReply() {
 	err = json.Unmarshal(body, &modelResp)
 	if err != nil {
 		fmt.Printf("Error unmarshalling response: %v\n", err)
+	}
+
+	userID := db.GetIDByUsername(context.Background(), m.CurrentUser)
+
+	historyArgs := db.CreateHistoryParams{
+		ID: 			uuid.New(),
+		userID:			userID,
+		CreatedAt:		time.Now(),
+		Prompt:			msg,
+		Reply:			modelResp.Response,
+	}
+	_, err = db.CreateHisory(context.Background(), historyArgs)
+	if err != nil {
+		fmt.Printf("error creating chat history: %s\n", err)
 	}
 
 	m.responseCh <- modelResp.Response
