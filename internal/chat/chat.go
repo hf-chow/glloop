@@ -67,6 +67,8 @@ func (m *Model) sendRequest(v string) {
 }
 
 func (m *Model) fetchReply() {
+	q := m.ModelState.DB
+
 	msg := <- m.requestCh
 	postBody, err := json.Marshal(Request{
 		Model: "llama3.2",
@@ -95,8 +97,7 @@ func (m *Model) fetchReply() {
 		fmt.Printf("Error unmarshalling response: %v\n", err)
 	}
 
-	userID, err := m.ModelState.DB.GetIDByUsername(
-		context.Background(), m.CurrentUser)
+	userID, err := q.GetIDByUsername(context.Background(), m.CurrentUser)
 
 	historyArgs := db.CreateHistoryParams{
 		ID: 			uuid.New(),
@@ -106,7 +107,7 @@ func (m *Model) fetchReply() {
 		Reply:			modelResp.Response,
 	}
 
-	_, err = m.ModelState.DB.CreateHistory(context.Background(), historyArgs)
+	_, err = q.CreateHistory(context.Background(), historyArgs)
 	if err != nil {
 		fmt.Printf("error creating chat history: %s\n", err)
 	}
