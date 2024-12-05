@@ -95,16 +95,18 @@ func (m *Model) fetchReply() {
 		fmt.Printf("Error unmarshalling response: %v\n", err)
 	}
 
-	userID := db.GetIDByUsername(context.Background(), m.CurrentUser)
+	userID, err := m.ModelState.DB.GetIDByUsername(
+		context.Background(), m.CurrentUser)
 
 	historyArgs := db.CreateHistoryParams{
 		ID: 			uuid.New(),
-		userID:			userID,
+		UserID:			userID,
 		CreatedAt:		time.Now(),
 		Prompt:			msg,
 		Reply:			modelResp.Response,
 	}
-	_, err = db.CreateHisory(context.Background(), historyArgs)
+
+	_, err = m.ModelState.DB.CreateHistory(context.Background(), historyArgs)
 	if err != nil {
 		fmt.Printf("error creating chat history: %s\n", err)
 	}
