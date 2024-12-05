@@ -17,3 +17,7 @@ LIMIT 1;
 -- name: GetAllHistoryByUserID :one
 SELECT * FROM history WHERE user_id = $1
 ORDER BY created_at DESC;
+
+-- name: DeleteAllHistoryByUserID :many
+DELETE FROM history WHERE user_id = $1
+RETURNING *;
