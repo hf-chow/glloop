@@ -44,8 +44,16 @@ func (m *Model) setAndGo() {
 }
 
 func (m *Model) Send(v string) {
+	q := m.ModelState.DB
+
+	username, err := q.GetUsernameByID(context.Background(), m.CurrentUserID)
+
+	if err != nil {
+		fmt.Printf("error in retrieving username: %v\n", err)
+	}
+
 	m.messages = append(
-		m.messages, m.senderStyle.Render(fmt.Sprintf(m.CurrentUser) +": ") + v,
+		m.messages, m.senderStyle.Render(fmt.Sprintf(username) +": ") + v,
 	)
 	go m.sendRequest(v)
 	m.setAndGo()
@@ -97,11 +105,9 @@ func (m *Model) fetchReply() {
 		fmt.Printf("Error unmarshalling response: %v\n", err)
 	}
 
-	userID, err := q.GetIDByUsername(context.Background(), m.CurrentUser)
-
 	historyArgs := db.CreateHistoryParams{
 		ID: 			uuid.New(),
-		UserID:			userID,
+		UserID:			m.CurrentUserID,
 		CreatedAt:		time.Now(),
 		Prompt:			msg,
 		Reply:			modelResp.Response,

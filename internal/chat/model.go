@@ -6,10 +6,13 @@ import (
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/hf-chow/glloop/internal/config"
+
+	"github.com/google/uuid"
+
+	config "github.com/hf-chow/glloop/internal/config"
 	db "github.com/hf-chow/glloop/internal/database"
+	tea "github.com/charmbracelet/bubbletea"
 
 )
 
@@ -28,13 +31,13 @@ type Model struct {
 	SystemStyle		lipgloss.Style
 	requestCh		chan string
 	responseCh		chan string
-	CurrentUser		string
+	CurrentUserID	uuid.UUID
 	ModelState		*State
 	err				error
 }
 
 
-func InitModel(username string, s *State) Model {
+func InitModel(userID uuid.UUID, s *State) Model {
 	requestCh := make(chan string, 1)
 	responseCh := make(chan string, 1)
 
@@ -60,7 +63,7 @@ func InitModel(username string, s *State) Model {
 		SystemStyle:	lipgloss.NewStyle().Foreground(lipgloss.Color("2")),
 		requestCh: 		requestCh,
 		responseCh: 	responseCh,
-		CurrentUser: 	username,
+		CurrentUserID: 	userID,
 		ModelState: 	s,
 		err:			nil,
 	}
@@ -72,7 +75,6 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q", "esc":

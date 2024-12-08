@@ -10,16 +10,12 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
 
+	tea "github.com/charmbracelet/bubbletea"
 	db "github.com/hf-chow/glloop/internal/database"
-
 	llm "github.com/hf-chow/glloop/internal/llm"
-
 	chat "github.com/hf-chow/glloop/internal/chat"
-
 	config "github.com/hf-chow/glloop/internal/config"
 )
 
@@ -44,16 +40,16 @@ func main() {
 	dbQueries := db.New(dbtx)
 	state.DB = dbQueries
 
-	username := login(*state.DB)
-	clearHistory(*state.DB, username)
+	userID := login(*state.DB)
+	clearHistory(*state.DB, userID)
 
-	p := tea.NewProgram(chat.InitModel(username, state))
+	p := tea.NewProgram(chat.InitModel(userID, state))
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
 }
 
-func login(q db.Queries) string {
+func login(q db.Queries) uuid.UUID {
 	fmt.Println("Enter your username: ")
 	var username string
 	fmt.Scanln(&username)
@@ -66,19 +62,19 @@ func login(q db.Queries) string {
 	}
 
 	q.CreateUser(context.Background(), userArgs)
+	userID, err := q.GetIDByUsername(context.Background(), username)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	}
 
-	return username
+	return userID
 }
 
-func clearHistory(q db.Queries, username string) {
+func clearHistory(q db.Queries, userID uuid.UUID) {
 	fmt.Println("Do you want to continue where you left off? ([Y]/N)")
 	var resp string
 	fmt.Scanln(&resp)
 	if strings.ToLower(resp) != "y" {
-		userID, err := q.GetIDByUsername(context.Background(), username)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		}
 		q.DeleteAllHistoryByUserID(context.Background(), userID)
 	}
 }
