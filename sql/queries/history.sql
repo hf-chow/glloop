@@ -14,7 +14,7 @@ SELECT * FROM history WHERE user_id = $1
 ORDER BY created_at DESC
 LIMIT 1;
 
--- name: GetAllHistoryByUserID :one
+-- name: GetAllHistoryByUserID :many
 SELECT * FROM history WHERE user_id = $1
 ORDER BY created_at DESC;
 
