@@ -21,7 +21,6 @@ type State struct {
 	DB 		*db.Queries
 }
 
-
 type Model struct {
 	viewport 		viewport.Model
 	messages		[]string
@@ -32,10 +31,10 @@ type Model struct {
 	requestCh		chan string
 	responseCh		chan string
 	CurrentUserID	uuid.UUID
+	CurrentModel	string
 	ModelState		*State
 	err				error
 }
-
 
 func InitModel(userID uuid.UUID, s *State) Model {
 	requestCh := make(chan string, 1)
@@ -64,6 +63,7 @@ func InitModel(userID uuid.UUID, s *State) Model {
 		requestCh: 		requestCh,
 		responseCh: 	responseCh,
 		CurrentUserID: 	userID,
+		CurrentModel: 	"llama3.2",
 		ModelState: 	s,
 		err:			nil,
 	}
@@ -95,7 +95,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case cursor.BlinkMsg:
 		var cmd tea.Cmd
-		go m.fetchReply()
+		go m.fetchSingleReply()
 		m.textarea, cmd = m.textarea.Update(msg)
 		return m, cmd
 	case BotResponseMsg:

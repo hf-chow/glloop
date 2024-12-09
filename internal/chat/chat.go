@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,11 +16,23 @@ import (
 	db "github.com/hf-chow/glloop/internal/database"
 )
 
-type Request struct {
-	Model 	string `json:"model"`
-	Prompt 	string `json:"prompt"`
-	Stream	bool 	`json:"stream"`
+type Message struct {
+	Role 	string 	`json:"role"`
+	Content	string	`json:"content"`
 }
+
+type GenerateRequest struct {
+	Model 	string 	`json:"model"`
+	Prompt 	string 	`json:"prompt"`
+	Stream	bool   	`json:"stream"`
+}
+
+type ChatRequest struct {
+	Model 		string 		`json:"model"`
+	Messages 	[]Message	`json:"messages"`	
+	Stream		bool 		`json:"stream"`
+}
+
 
 type Response struct {
 	Model  					string	`json:"model"`
@@ -51,7 +64,6 @@ func (m *Model) Send(v string) {
 	if err != nil {
 		fmt.Printf("error in retrieving username: %v\n", err)
 	}
-
 	m.messages = append(
 		m.messages, m.senderStyle.Render(fmt.Sprintf(username) +": ") + v,
 	)
@@ -74,11 +86,11 @@ func (m *Model) sendRequest(v string) {
 	m.requestCh <- v
 }
 
-func (m *Model) fetchReply() {
+func (m *Model) fetchSingleReply() {
 	q := m.ModelState.DB
 
 	msg := <- m.requestCh
-	postBody, err := json.Marshal(Request{
+	postBody, err := json.Marshal(GenerateRequest{
 		Model: "llama3.2",
 		Prompt: msg,
 		Stream: false,
@@ -119,6 +131,66 @@ func (m *Model) fetchReply() {
 	}
 
 	m.responseCh <- modelResp.Response
+}
+
+func (m *Model) fetchReplyWithHistory() error {
+	q := m.ModelState.DB
+
+	msgs, err := m.createMessageFromHistory()
+	if err != nil {
+		fmt.Printf("error creating messages from history: %s\n", err)
+
+	}
+
+	postBody, err := json.Marshal(ChatRequest{
+		Model: 		m.CurrentModel,
+		Messages: 	msgs,
+		Stream: 	false,
+	})
+	if err != nil {
+		fmt.Printf("Error marshalling request: %v\n", err)
+	}
+	buf := bytes.NewBuffer(postBody)
+	resp, err := http.Post(
+		"http://localhost:11434/api/generate", "application/json", buf,
+	)
+	if err != nil {
+		fmt.Printf("Error marshalling request: %v\n", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Error reading response: %v\n", err)
+	}
+
+	var modelResp Response
+	err = json.Unmarshal(body, &modelResp)
+	if err != nil {
+		fmt.Printf("Error unmarshalling response: %v\n", err)
+		return err
+	}
+
+	if len(msgs) > 0 {
+		lastMsg := msgs[len(msgs)-1].Content
+		historyArgs := db.CreateHistoryParams{
+			ID: 			uuid.New(),
+			UserID:			m.CurrentUserID,
+			CreatedAt:		time.Now(),
+			Prompt:			lastMsg,
+			Reply:			modelResp.Response,
+		}
+		_, err = q.CreateHistory(context.Background(), historyArgs)
+
+		if err != nil {
+			fmt.Printf("error creating chat history: %s\n", err)
+			return err
+		}
+		m.responseCh <- modelResp.Response
+	} else {
+		return errors.New("Messages slice is empty")
+	}
+
+	return nil
 }
 
 func (m *Model) reply() {
