@@ -95,7 +95,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case cursor.BlinkMsg:
 		var cmd tea.Cmd
-		go m.fetchSingleReply()
+		if m.historyExist() {
+			go m.fetchReplyWithHistory()
+		} else {
+			go m.fetchSingleReply()
+		}
 		m.textarea, cmd = m.textarea.Update(msg)
 		return m, cmd
 	case BotResponseMsg:

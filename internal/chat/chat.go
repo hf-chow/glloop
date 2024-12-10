@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -133,13 +132,14 @@ func (m *Model) fetchSingleReply() {
 	m.responseCh <- modelResp.Response
 }
 
-func (m *Model) fetchReplyWithHistory() error {
+func (m *Model) fetchReplyWithHistory() {
 	q := m.ModelState.DB
 
-	msgs, err := m.createMessageFromHistory()
+	lastPrompt := <- m.requestCh
+
+	msgs, err := m.createMessagesFromHistory(lastPrompt)
 	if err != nil {
 		fmt.Printf("error creating messages from history: %s\n", err)
-
 	}
 
 	postBody, err := json.Marshal(ChatRequest{
@@ -152,7 +152,7 @@ func (m *Model) fetchReplyWithHistory() error {
 	}
 	buf := bytes.NewBuffer(postBody)
 	resp, err := http.Post(
-		"http://localhost:11434/api/generate", "application/json", buf,
+		"http://localhost:11434/api/chat", "application/json", buf,
 	)
 	if err != nil {
 		fmt.Printf("Error marshalling request: %v\n", err)
@@ -167,7 +167,6 @@ func (m *Model) fetchReplyWithHistory() error {
 	err = json.Unmarshal(body, &modelResp)
 	if err != nil {
 		fmt.Printf("Error unmarshalling response: %v\n", err)
-		return err
 	}
 
 	if len(msgs) > 0 {
@@ -183,19 +182,16 @@ func (m *Model) fetchReplyWithHistory() error {
 
 		if err != nil {
 			fmt.Printf("error creating chat history: %s\n", err)
-			return err
 		}
 		m.responseCh <- modelResp.Response
 	} else {
-		return errors.New("Messages slice is empty")
+		 fmt.Printf("Messages slice is empty")
 	}
-
-	return nil
 }
 
 func (m *Model) reply() {
 	response :=  <- m.responseCh
-// 	fmt.Printf("Got reply: %s", response)
+ 	fmt.Printf("Got reply: %s", response)
 	m.messages = append(m.messages, m.responderStyle.Render("Bot: ")+response)
 	m.setAndGo()
 }
