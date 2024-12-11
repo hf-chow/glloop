@@ -138,6 +138,7 @@ func (m *Model) fetchReplyWithHistory() {
 	lastPrompt := <- m.requestCh
 
 	msgs, err := m.createMessagesFromHistory(lastPrompt)
+	fmt.Printf("%v", msgs)
 	if err != nil {
 		fmt.Printf("error creating messages from history: %s\n", err)
 	}
@@ -169,24 +170,20 @@ func (m *Model) fetchReplyWithHistory() {
 		fmt.Printf("Error unmarshalling response: %v\n", err)
 	}
 
-	if len(msgs) > 0 {
-		lastMsg := msgs[len(msgs)-1].Content
-		historyArgs := db.CreateHistoryParams{
-			ID: 			uuid.New(),
-			UserID:			m.CurrentUserID,
-			CreatedAt:		time.Now(),
-			Prompt:			lastMsg,
-			Reply:			modelResp.Response,
-		}
-		_, err = q.CreateHistory(context.Background(), historyArgs)
-
-		if err != nil {
-			fmt.Printf("error creating chat history: %s\n", err)
-		}
-		m.responseCh <- modelResp.Response
-	} else {
-		 fmt.Printf("Messages slice is empty")
+	lastMsg := msgs[len(msgs)-1].Content
+	historyArgs := db.CreateHistoryParams{
+		ID: 			uuid.New(),
+		UserID:			m.CurrentUserID,
+		CreatedAt:		time.Now(),
+		Prompt:			lastMsg,
+		Reply:			modelResp.Response,
 	}
+	_, err = q.CreateHistory(context.Background(), historyArgs)
+
+	if err != nil {
+		fmt.Printf("error creating chat history: %s\n", err)
+	} 
+	m.responseCh <- modelResp.Response
 }
 
 func (m *Model) reply() {

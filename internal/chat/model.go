@@ -50,7 +50,7 @@ func InitModel(userID uuid.UUID, s *State) Model {
 
 	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
 	ta.ShowLineNumbers = false
-	vp := viewport.New(100, 10)
+	vp := viewport.New(100, 5)
 	vp.SetContent(`You are in the chat room. Type a message and press Enter to send.`)
 	ta.KeyMap.InsertNewline.SetEnabled(false)
 	return Model{
