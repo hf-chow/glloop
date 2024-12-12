@@ -15,7 +15,7 @@ import (
 	db "github.com/hf-chow/glloop/internal/database"
 )
 
-type Message struct {
+type ChatMessage struct {
 	Role 	string 	`json:"role"`
 	Content	string	`json:"content"`
 }
@@ -27,9 +27,9 @@ type GenerateRequest struct {
 }
 
 type ChatRequest struct {
-	Model 		string 		`json:"model"`
-	Messages 	[]Message	`json:"messages"`	
-	Stream		bool 		`json:"stream"`
+	Model 		string 			`json:"model"`
+	Messages 	[]ChatMessage	`json:"messages"`	
+	Stream		bool 			`json:"stream"`
 }
 
 
@@ -70,17 +70,6 @@ func (m *Model) Send(v string) {
 	m.setAndGo()
 }
 
-func (m *Model) SysReply() {
-	m.messages = append(m.messages, m.SystemStyle.Render("Standby..."))
-	m.setAndGo()
-}
-
-func (m *Model) Blink() {
-	// For testing only
-	m.messages = append(m.messages, m.SystemStyle.Render("Blink..."))
-	m.setAndGo()
-}
-
 func (m *Model) sendRequest(v string) {
 	m.requestCh <- v
 }
@@ -89,7 +78,7 @@ func (m *Model) fetchSingleReply() {
 	q := m.ModelState.DB
 
 	msg := <- m.requestCh
-	postBody, err := json.Marshal(GenerateRequest{
+	dat, err := json.Marshal(GenerateRequest{
 		Model: "llama3.2",
 		Prompt: msg,
 		Stream: false,
@@ -97,7 +86,7 @@ func (m *Model) fetchSingleReply() {
 	if err != nil {
 		fmt.Printf("Error marshalling request: %v\n", err)
 	}
-	buf := bytes.NewBuffer(postBody)
+	buf := bytes.NewBuffer(dat)
 	resp, err := http.Post(
 		"http://localhost:11434/api/generate", "application/json", buf,
 	)
@@ -138,12 +127,11 @@ func (m *Model) fetchReplyWithHistory() {
 	lastPrompt := <- m.requestCh
 
 	msgs, err := m.createMessagesFromHistory(lastPrompt)
-	fmt.Printf("%v", msgs)
 	if err != nil {
 		fmt.Printf("error creating messages from history: %s\n", err)
 	}
 
-	postBody, err := json.Marshal(ChatRequest{
+	dat, err := json.Marshal(ChatRequest{
 		Model: 		m.CurrentModel,
 		Messages: 	msgs,
 		Stream: 	false,
@@ -151,13 +139,15 @@ func (m *Model) fetchReplyWithHistory() {
 	if err != nil {
 		fmt.Printf("Error marshalling request: %v\n", err)
 	}
-	buf := bytes.NewBuffer(postBody)
+
+	buf := bytes.NewBuffer(dat)
 	resp, err := http.Post(
 		"http://localhost:11434/api/chat", "application/json", buf,
 	)
 	if err != nil {
 		fmt.Printf("Error marshalling request: %v\n", err)
 	}
+
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

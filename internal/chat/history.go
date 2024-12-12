@@ -4,40 +4,40 @@ import (
 	"context"
 )
 
-func (m *Model) createMessagesFromHistory(lastPrompt string) ([]Message, error) {
+func (m *Model) createMessagesFromHistory(lastPrompt string) ([]ChatMessage, error) {
 	q := m.ModelState.DB
 
-	username, err := q.GetUsernameByID(context.Background(), m.CurrentUserID)
-	if err != nil {
-		return []Message{}, err
-	}
+	//username, err := q.GetUsernameByID(context.Background(), m.CurrentUserID)
+	//if err != nil {
+	//	return []Message{}, err
+	//}
 
 	histories, err := q.GetAllHistoryByUserID(context.Background(), m.CurrentUserID)
 	if err != nil {
-		return []Message{}, err
+		return []ChatMessage{}, err
 	}
 
-	msgs := []Message{}
+	msgs := []ChatMessage{}
 
 	for _, history := range histories {
-		msg := Message{
-			Role: 		username,
+		msg := ChatMessage{
+			Role: 		"user",
 			Content: 	history.Prompt,
 		}
 		msgs = append(msgs, msg)
 
-		replyMsg := Message {
+		replyMsg := ChatMessage {
 			Role: 		"assistant",
 			Content: 	history.Reply,
 		}
 		msgs = append(msgs, replyMsg)
 
-		lastMsg := Message {
-			Role: 		username,
-			Content: 	lastPrompt,
-		}
-		msgs = append(msgs, lastMsg)
 	}
+	lastMsg := ChatMessage {
+		Role: 		"user",
+		Content: 	lastPrompt,
+	}
+	msgs = append(msgs, lastMsg)
 	return msgs, nil
 }
 
