@@ -11,27 +11,25 @@ func (m *Model) createMessagesFromHistory(lastPrompt string) ([]ChatMessage, err
 	//if err != nil {
 	//	return []Message{}, err
 	//}
-
 	histories, err := q.GetAllHistoryByUserID(context.Background(), m.CurrentUserID)
 	if err != nil {
 		return []ChatMessage{}, err
 	}
 
 	msgs := []ChatMessage{}
-
 	for _, history := range histories {
 		msg := ChatMessage{
 			Role: 		"user",
 			Content: 	history.Prompt,
 		}
 		msgs = append(msgs, msg)
-
-		replyMsg := ChatMessage {
-			Role: 		"assistant",
-			Content: 	history.Reply,
+		if len(history.Reply) > 0 {
+			replyMsg := ChatMessage {
+				Role: 		"assistant",
+				Content: 	history.Reply,
+			}
+			msgs = append(msgs, replyMsg)
 		}
-		msgs = append(msgs, replyMsg)
-
 	}
 	lastMsg := ChatMessage {
 		Role: 		"user",

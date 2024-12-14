@@ -94,6 +94,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 	case cursor.BlinkMsg:
+		hist, _ := m.createMessagesFromHistory("")
+		fmt.Println(hist)
 		var cmd tea.Cmd
 		if m.historyExist() {
 			go m.fetchReplyWithHistory()
