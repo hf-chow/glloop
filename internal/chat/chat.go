@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -135,9 +136,13 @@ func (m *Model) fetchReplyWithHistory() {
 		Messages: 	msgs,
 		Stream: 	false,
 	})
-
 	if err != nil {
 		fmt.Printf("Error marshalling request: %v\n", err)
+	}
+
+	err = os.WriteFile("request_body.json", dat, 0644)
+	if err != nil {
+		fmt.Printf("error writing JSON to file: %s\n", err)
 	}
 
 	buf := bytes.NewBuffer(dat)
@@ -178,7 +183,6 @@ func (m *Model) fetchReplyWithHistory() {
 
 func (m *Model) reply() {
 	response := <-m.responseCh
-	fmt.Printf("Got reply: %s", response)
 	m.messages = append(m.messages, m.responderStyle.Render("Bot: ")+response)
 	m.setAndGo()
 }
