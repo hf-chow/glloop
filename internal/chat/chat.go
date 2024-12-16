@@ -140,11 +140,6 @@ func (m *Model) fetchReplyWithHistory() {
 		fmt.Printf("Error marshalling request: %v\n", err)
 	}
 
-	err = os.WriteFile("request_body.json", dat, 0644)
-	if err != nil {
-		fmt.Printf("error writing JSON to file: %s\n", err)
-	}
-
 	buf := bytes.NewBuffer(dat)
 	resp, err := http.Post(
 		"http://localhost:11434/api/chat", "application/json", buf,
@@ -157,11 +152,6 @@ func (m *Model) fetchReplyWithHistory() {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("Error reading response: %v\n", err)
-	}
-
-	err = os.WriteFile("response_body.json", body, 0644)
-	if err != nil {
-		fmt.Printf("error writing JSON to file: %s\n", err)
 	}
 
 	var modelResp Response
