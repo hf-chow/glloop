@@ -57,7 +57,7 @@ func (m *Model) historyExist() bool {
 	}
 }
 
-func (m *Model) createHistoryFromLastMessage(modelResp ChatResponse, lastMsg ChatMessage) error {
+func (m *Model) createHistoryFromLastChatMessage(modelResp ChatResponse, lastMsg ChatMessage) error {
 	q := m.ModelState.DB
 	historyArgs := db.CreateHistoryParams{
 		ID:        uuid.New(),
@@ -67,10 +67,27 @@ func (m *Model) createHistoryFromLastMessage(modelResp ChatResponse, lastMsg Cha
 		Reply:     modelResp.Message.Content,
 	}
 	_, err := q.CreateHistory(context.Background(), historyArgs)
-
 	if err != nil {
 		fmt.Printf("error creating chat history: %s\n", err)
 		return err
 	}
+	return nil
+}
+
+func (m *Model) createHistoryFromLastPrompt(modelResp GenerateResponse, lastMsg GenerateRequest) error {
+	q := m.ModelState.DB
+	historyArgs := db.CreateHistoryParams{
+		ID:        uuid.New(),
+		UserID:    m.CurrentUserID,
+		CreatedAt: time.Now(),
+		Prompt:    lastMsg.Prompt,
+		Reply:     modelResp.Response,
+	}
+
+	_, err := q.CreateHistory(context.Background(), historyArgs)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

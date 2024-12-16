@@ -88,14 +88,13 @@ func (m *Model) sendRequest(v string) {
 }
 
 func (m *Model) fetchSingleReply() {
-	q := m.ModelState.DB
-
-	msg := <-m.requestCh
-	dat, err := json.Marshal(GenerateRequest{
+	lastPrompt := <-m.requestCh
+	lastMsg := GenerateRequest{
 		Model:  "llama3.2",
-		Prompt: msg,
+		Prompt: lastPrompt,
 		Stream: false,
-	})
+	}
+	dat, err := json.Marshal(lastMsg)
 	if err != nil {
 		fmt.Printf("Error marshalling request: %v\n", err)
 	}
@@ -118,15 +117,7 @@ func (m *Model) fetchSingleReply() {
 		fmt.Printf("Error unmarshalling response: %v\n", err)
 	}
 
-	historyArgs := db.CreateHistoryParams{
-		ID:        uuid.New(),
-		UserID:    m.CurrentUserID,
-		CreatedAt: time.Now(),
-		Prompt:    msg,
-		Reply:     modelResp.Response,
-	}
-
-	_, err = q.CreateHistory(context.Background(), historyArgs)
+	err = m.createHistoryFromLastPrompt(modelResp, lastMsg)
 	if err != nil {
 		fmt.Printf("error creating chat history: %s\n", err)
 	}
@@ -172,7 +163,7 @@ func (m *Model) fetchReplyWithHistory() {
 	}
 
 	lastMsg := msgs[len(msgs)-1]
-	err = m.createHistoryFromLastMessage(modelResp, lastMsg)
+	err = m.createHistoryFromLastChatMessage(modelResp, lastMsg)
 	if err != nil {
 		fmt.Printf("Error creating chat history: %v\n", err)
 	}
