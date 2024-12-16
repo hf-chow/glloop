@@ -74,7 +74,7 @@ func clearHistory(q db.Queries, userID uuid.UUID) {
 	fmt.Println("Do you want to continue where you left off? ([Y]/N)")
 	var resp string
 	fmt.Scanln(&resp)
-	if strings.ToLower(resp) != "y" {
+	if strings.ToLower(resp) == "n" {
 		q.DeleteAllHistoryByUserID(context.Background(), userID)
 	}
 }
