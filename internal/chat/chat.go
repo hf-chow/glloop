@@ -159,6 +159,11 @@ func (m *Model) fetchReplyWithHistory() {
 		fmt.Printf("Error reading response: %v\n", err)
 	}
 
+	err = os.WriteFile("response_body.json", body, 0644)
+	if err != nil {
+		fmt.Printf("error writing JSON to file: %s\n", err)
+	}
+
 	var modelResp Response
 	err = json.Unmarshal(body, &modelResp)
 	if err != nil {
