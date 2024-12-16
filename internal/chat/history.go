@@ -2,6 +2,11 @@ package chat
 
 import (
 	"context"
+	"fmt"
+	"time"
+
+	db "github.com/hf-chow/glloop/internal/database"
+	"github.com/google/uuid"
 )
 
 func (m *Model) createMessagesFromHistory(lastPrompt string) ([]ChatMessage, error) {
@@ -50,4 +55,22 @@ func (m *Model) historyExist() bool {
 	} else {
 		return false
 	}
+}
+
+func (m *Model) createHistoryFromLastMessage(modelResp ChatResponse, lastMsg ChatMessage) error {
+	q := m.ModelState.DB
+	historyArgs := db.CreateHistoryParams{
+		ID:        uuid.New(),
+		UserID:    m.CurrentUserID,
+		CreatedAt: time.Now(),
+		Prompt:    lastMsg.Content,
+		Reply:     modelResp.Message.Content,
+	}
+	_, err := q.CreateHistory(context.Background(), historyArgs)
+
+	if err != nil {
+		fmt.Printf("error creating chat history: %s\n", err)
+		return err
+	}
+	return nil
 }

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -33,7 +32,7 @@ type ChatRequest struct {
 	Stream   bool          `json:"stream"`
 }
 
-type Response struct {
+type GenerateResponse struct {
 	Model                string `json:"model"`
 	Created_at           string `json:"created_at"`
 	Response             string `json:"response"`
@@ -45,6 +44,20 @@ type Response struct {
 	Prompt_eval_duration int    `json:"prompt_eval_duration"`
 	Eval_count           int    `json:"eval_count"`
 	Eval_duration        int    `json:"eval_duration"`
+}
+
+type ChatResponse struct {
+	Model                string 	 `json:"model"`
+	Created_at           string 	 `json:"created_at"`
+	Message              ChatMessage `json:"message"`
+	Done_reason			 string		 `json:"done_reason"`
+	Done                 bool   	 `json:"done"`
+	Total_duration       int    	 `json:"total_duration"`
+	Load_duration        int    	 `json:"load_duration"`
+	Prompt_eval_count    int    	 `json:"prompt_eval_count"`
+	Prompt_eval_duration int    	 `json:"prompt_eval_duration"`
+	Eval_count           int    	 `json:"eval_count"`
+	Eval_duration        int    	 `json:"eval_duration"`
 }
 
 type BotResponseMsg string
@@ -99,7 +112,7 @@ func (m *Model) fetchSingleReply() {
 		fmt.Printf("Error reading response: %v\n", err)
 	}
 
-	var modelResp Response
+	var modelResp GenerateResponse
 	err = json.Unmarshal(body, &modelResp)
 	if err != nil {
 		fmt.Printf("Error unmarshalling response: %v\n", err)
@@ -122,8 +135,6 @@ func (m *Model) fetchSingleReply() {
 }
 
 func (m *Model) fetchReplyWithHistory() {
-	q := m.ModelState.DB
-
 	lastPrompt := <-m.requestCh
 
 	msgs, err := m.createMessagesFromHistory(lastPrompt)
@@ -154,26 +165,19 @@ func (m *Model) fetchReplyWithHistory() {
 		fmt.Printf("Error reading response: %v\n", err)
 	}
 
-	var modelResp Response
+	var modelResp ChatResponse
 	err = json.Unmarshal(body, &modelResp)
 	if err != nil {
 		fmt.Printf("Error unmarshalling response: %v\n", err)
 	}
 
 	lastMsg := msgs[len(msgs)-1]
-	historyArgs := db.CreateHistoryParams{
-		ID:        uuid.New(),
-		UserID:    m.CurrentUserID,
-		CreatedAt: time.Now(),
-		Prompt:    lastMsg.Content,
-		Reply:     modelResp.Response,
-	}
-	_, err = q.CreateHistory(context.Background(), historyArgs)
-
+	err = m.createHistoryFromLastMessage(modelResp, lastMsg)
 	if err != nil {
-		fmt.Printf("error creating chat history: %s\n", err)
+		fmt.Printf("Error creating chat history: %v\n", err)
 	}
-	m.responseCh <- modelResp.Response
+
+	m.responseCh <- modelResp.Message.Content
 }
 
 func (m *Model) reply() {
