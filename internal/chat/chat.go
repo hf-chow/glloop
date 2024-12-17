@@ -8,11 +8,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/google/uuid"
-	db "github.com/hf-chow/glloop/internal/database"
 )
 
 type ChatMessage struct {
