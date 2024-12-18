@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"time"
 
-	_ "github.com/lib/pq"
 	"github.com/google/uuid"
+	_ "github.com/lib/pq"
 
 	tea "github.com/charmbracelet/bubbletea"
+	chat "github.com/hf-chow/glloop/internal/chat"
+	comp "github.com/hf-chow/glloop/internal/components"
+	config "github.com/hf-chow/glloop/internal/config"
 	db "github.com/hf-chow/glloop/internal/database"
 	llm "github.com/hf-chow/glloop/internal/llm"
-	chat "github.com/hf-chow/glloop/internal/chat"
-	config "github.com/hf-chow/glloop/internal/config"
 )
 
 func main() {
@@ -41,9 +41,23 @@ func main() {
 	state.DB = dbQueries
 
 	userID := login(*state.DB)
-	clearHistory(*state.DB, userID)
 
-	p := tea.NewProgram(chat.InitModel(userID, state))
+	p := tea.NewProgram(comp.HistoryModel{})
+	m, err := p.Run()
+	if err != nil {
+		fmt.Printf("error building HistoryModel: %v", err)
+		os.Exit(1)
+	}
+
+	historyModel, ok := m.(comp.HistoryModel)
+	if !ok {
+		fmt.Println("Error: returned model is not of type HistoryModel")
+		os.Exit(1)
+	}
+	if historyModel.choice == "Yes" {
+		historyModel.clearHistory(*state.DB, userID)
+	}
+	p = tea.NewProgram(chat.InitModel(userID, state))
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
@@ -55,10 +69,10 @@ func login(q db.Queries) uuid.UUID {
 	fmt.Scanln(&username)
 
 	userArgs := db.CreateUserParams{
-		ID: 		uuid.New(),
-		CreatedAt:	time.Now(),
-		UpdatedAt:	time.Now(),
-		Name:		username,
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      username,
 	}
 
 	q.CreateUser(context.Background(), userArgs)
@@ -68,13 +82,4 @@ func login(q db.Queries) uuid.UUID {
 	}
 
 	return userID
-}
-
-func clearHistory(q db.Queries, userID uuid.UUID) {
-	fmt.Println("Do you want to continue where you left off? ([Y]/N)")
-	var resp string
-	fmt.Scanln(&resp)
-	if strings.ToLower(resp) == "n" {
-		q.DeleteAllHistoryByUserID(context.Background(), userID)
-	}
 }

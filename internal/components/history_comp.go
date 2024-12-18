@@ -1,10 +1,13 @@
-package history
+package components
 
 import (
-	"fmt"
+	"context"
 	"strings"
 
+	"github.com/google/uuid"
+
 	tea "github.com/charmbracelet/bubbletea"
+	db "github.com/hf-chow/glloop/internal/database"
 )
 
 var historyChoices = []string{"Yes", "No"}
@@ -40,9 +43,7 @@ func (m HistoryModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.cursor < 0 {
 				m.cursor = len(historyChoices) - 1
 			}
-
 		}
-
 	}
 	return m, nil
 }
@@ -65,16 +66,7 @@ func (m HistoryModel) View() string {
 	return s.String()
 }
 
-func main() {
-	p := tea.NewProgram(HistoryModel{})
-
-	m, err := p.Run()
-	if err != nil {
-		fmt.Printf("error building HistoryModel: %v", err)
-	}
-
-	if m, ok := m.(HistoryModel); ok && m.choice != "" {
-		fmt.Printf("\n---\nYou chose %s!\n", m.choice)
-	}
-
+func (m HistoryModel) clearHistory(q db.Queries, userID uuid.UUID) {
+	q.DeleteAllHistoryByUserID(context.Background(), userID)
 }
+
