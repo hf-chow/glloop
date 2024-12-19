@@ -54,9 +54,12 @@ func main() {
 		fmt.Println("Error: returned model is not of type HistoryModel")
 		os.Exit(1)
 	}
-	if historyModel.choice == "Yes" {
-		historyModel.clearHistory(*state.DB, userID)
+
+	if historyModel.Choice == "Yes" {
+		historyModel.ClearHistory(*state.DB, userID)
 	}
+
+
 	p = tea.NewProgram(chat.InitModel(userID, state))
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

@@ -13,8 +13,8 @@ import (
 var historyChoices = []string{"Yes", "No"}
 
 type HistoryModel struct {
-	cursor int
-	choice string
+	Cursor int
+	Choice string
 }
 
 func (m HistoryModel) Init() tea.Cmd {
@@ -29,19 +29,19 @@ func (m HistoryModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "enter":
-			m.choice = historyChoices[m.cursor]
+			m.Choice = historyChoices[m.Cursor]
 			return m, tea.Quit
 
 		case "down", "j":
-			m.cursor++
-			if m.cursor >= len(historyChoices) {
-				m.cursor = 0
+			m.Cursor++
+			if m.Cursor >= len(historyChoices) {
+				m.Cursor = 0
 			}
 
 		case "up", "k":
-			m.cursor--
-			if m.cursor < 0 {
-				m.cursor = len(historyChoices) - 1
+			m.Cursor--
+			if m.Cursor < 0 {
+				m.Cursor = len(historyChoices) - 1
 			}
 		}
 	}
@@ -53,7 +53,7 @@ func (m HistoryModel) View() string {
 	s.WriteString("Would you like to continue where you left off?\n\n")
 
 	for i := 0; i < len(historyChoices); i ++ {
-		if m.cursor == i {
+		if m.Cursor == i {
 			s.WriteString("(•)")
 		} else {
 			s.WriteString("( )")
@@ -66,7 +66,7 @@ func (m HistoryModel) View() string {
 	return s.String()
 }
 
-func (m HistoryModel) clearHistory(q db.Queries, userID uuid.UUID) {
+func (m HistoryModel) ClearHistory(q db.Queries, userID uuid.UUID) {
 	q.DeleteAllHistoryByUserID(context.Background(), userID)
 }
 
