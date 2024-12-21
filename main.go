@@ -40,7 +40,7 @@ func main() {
 	dbQueries := db.New(dbtx)
 	state.DB = dbQueries
 
-	userID := login(*state.DB)
+	userID := comp.Login(*state.DB)
 
 	p := tea.NewProgram(comp.HistoryModel{})
 	m, err := p.Run()
@@ -64,25 +64,4 @@ func main() {
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
-}
-
-func login(q db.Queries) uuid.UUID {
-	fmt.Println("Enter your username: ")
-	var username string
-	fmt.Scanln(&username)
-
-	userArgs := db.CreateUserParams{
-		ID:        uuid.New(),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		Name:      username,
-	}
-
-	q.CreateUser(context.Background(), userArgs)
-	userID, err := q.GetIDByUsername(context.Background(), username)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-	}
-
-	return userID
 }
