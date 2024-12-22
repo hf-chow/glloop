@@ -1,14 +1,11 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"os"
-	"time"
 
-	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 
 	tea "github.com/charmbracelet/bubbletea"
