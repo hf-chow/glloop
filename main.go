@@ -37,10 +37,23 @@ func main() {
 	dbQueries := db.New(dbtx)
 	state.DB = dbQueries
 
-	userID := comp.Login(*state.DB)
 
-	p := tea.NewProgram(comp.HistoryModel{})
+	p := tea.NewProgram(comp.LoginModel{})
 	m, err := p.Run()
+	if err != nil {
+		fmt.Printf("error building LoginModel: %v", err)
+		os.Exit(1)
+	}
+
+	loginModel, ok := m.(comp.LoginModel)
+	if !ok {
+		fmt.Println("Error: returned model is not of type LoginModel")
+		os.Exit(1)
+	}
+
+	userID := loginModel.UserID
+	p = tea.NewProgram(comp.HistoryModel{})
+	m, err = p.Run()
 	if err != nil {
 		fmt.Printf("error building HistoryModel: %v", err)
 		os.Exit(1)
