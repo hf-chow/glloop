@@ -37,8 +37,7 @@ func main() {
 	dbQueries := db.New(dbtx)
 	state.DB = dbQueries
 
-
-	p := tea.NewProgram(comp.LoginModel{})
+	p := tea.NewProgram(comp.InitLoginModel())
 	m, err := p.Run()
 	if err != nil {
 		fmt.Printf("error building LoginModel: %v", err)
