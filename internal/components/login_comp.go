@@ -99,7 +99,7 @@ func (m LoginModel) View() string {
 `,
 		inputStyle.Width(30).Render("Username"),
 		m.inputs[username].View(),
-		continueStyle.Render("Continue ->"),
+		continueStyle.Render("Press Enter to continue"),
 	) + "\n"
 }
 
