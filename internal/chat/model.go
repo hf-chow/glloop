@@ -16,6 +16,19 @@ import (
 
 )
 
+var (
+	titleStyle = func() lipgloss.Style {
+		b := lipgloss.RoundedBorder()
+		b.Right = "├"
+		return lipgloss.NewStyle().BorderStyle(b).Padding(0, 1)
+	}()
+	infoStyle = func() lipgloss.Style {
+		b := lipgloss.RoundedBorder()
+		b.Left = "┤"
+		return titleStyle.BorderStyle(b)
+	}()
+)
+
 type State struct {
 	Config	*config.Config
 	DB 		*db.Queries
@@ -24,6 +37,8 @@ type State struct {
 type Model struct {
 	viewport 		viewport.Model
 	messages		[]string
+	content			string
+	ready			bool
 	textarea		textarea.Model
 	senderStyle		lipgloss.Style
 	responderStyle	lipgloss.Style
