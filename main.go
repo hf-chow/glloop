@@ -68,8 +68,10 @@ func main() {
 		historyModel.ClearHistory(*state.DB, userID)
 	}
 
-
-	p = tea.NewProgram(chat.InitModel(userID, state))
+	p = tea.NewProgram(
+		chat.InitModel(userID, state),
+		tea.WithMouseCellMotion(),
+	)
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
