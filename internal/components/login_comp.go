@@ -114,30 +114,35 @@ func (m *LoginModel) prevInput() {
 	}
 }
 
-func (m *LoginModel) Login(q db.Queries) uuid.UUID {
-	var userID uuid.UUID
-	fmt.Println("Enter your username: ")
-	name := m.inputs[username].View()
-	exists, err := q.UsernameExists(context.Background(), name)
-	if err != nil {
-		fmt.Printf("error when checking if username exists: %s", err)
+func (m *LoginModel) Login(q db.Queries) (uuid.UUID, error) {
+	name := m.inputs[username].Value()
+	if name == "" {
+		return uuid.UUID{}, fmt.Errorf("username cannot be empty")
 	}
 
+	exists, err := q.UsernameExists(context.Background(), name)
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("error when checking if username exists: %w", err)
+	}
+
+	var userID uuid.UUID
 	if exists {
 		userID, err = q.GetIDByUsername(context.Background(), name)
 		if err != nil {
-			fmt.Printf("error when retrieving userID: %s", err)
+			return uuid.UUID{}, fmt.Errorf("error when retrieving userID: %w", err)
 		}
 	} else {
+		userID = uuid.New()
 		userArgs := db.CreateUserParams{
-			ID:        uuid.New(),
+			ID:        userID,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 			Name:      name,
 		}
-		q.CreateUser(context.Background(), userArgs)
-		userID = userArgs.ID
+		_, err := q.CreateUser(context.Background(), userArgs)
+		if err != nil {
+			return uuid.UUID{}, fmt.Errorf("error when creating new user: %w", err)
+		}
 	}
-
-	return userID
+	return userID, nil
 }
