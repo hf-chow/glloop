@@ -115,10 +115,20 @@ func (m *LoginModel) prevInput() {
 }
 
 func (m *LoginModel) Login(q db.Queries) uuid.UUID {
+	var userID uuid.UUID
 	fmt.Println("Enter your username: ")
 	name := m.inputs[username].View()
-	userID, err := q.GetIDByUsername(context.Background(), name)
+	exists, err := q.UsernameExists(context.Background(), name)
 	if err != nil {
+		fmt.Printf("error when checking if username exists: %s", err)
+	}
+
+	if exists {
+		userID, err = q.GetIDByUsername(context.Background(), name)
+		if err != nil {
+			fmt.Printf("error when retrieving userID: %s", err)
+		}
+	} else {
 		userArgs := db.CreateUserParams{
 			ID:        uuid.New(),
 			CreatedAt: time.Now(),
@@ -128,5 +138,6 @@ func (m *LoginModel) Login(q db.Queries) uuid.UUID {
 		q.CreateUser(context.Background(), userArgs)
 		userID = userArgs.ID
 	}
+
 	return userID
 }
