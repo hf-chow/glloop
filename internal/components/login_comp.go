@@ -45,6 +45,7 @@ func InitLoginModel() LoginModel {
 	inputs[username].Placeholder = "How would you like to be referred?"
 	inputs[username].Focus()
 	inputs[username].Prompt = ""
+	inputs[username].Validate = LoginValidator
 	return LoginModel {
 		inputs:		inputs,
 		focused:	0,
@@ -114,8 +115,8 @@ func (m *LoginModel) prevInput() {
 	}
 }
 
-func (m *LoginModel) Login(q db.Queries) (uuid.UUID, error) {
-	name := m.inputs[username].Value()
+func (m *LoginModel) LoginValidator(name string) (error) {
+	q := db.Queries{}
 	if name == "" {
 		return uuid.UUID{}, fmt.Errorf("username cannot be empty")
 	}
@@ -144,5 +145,5 @@ func (m *LoginModel) Login(q db.Queries) (uuid.UUID, error) {
 			return uuid.UUID{}, fmt.Errorf("error when creating new user: %w", err)
 		}
 	}
-	return userID, nil
+	return nil
 }
