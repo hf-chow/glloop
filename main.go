@@ -50,6 +50,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	err = loginModel.LoginValidator()
+	if !ok {
+		fmt.Println("Error: login cannot be validated")
+	}
+
 	userID := loginModel.UserID
 	p = tea.NewProgram(comp.HistoryModel{})
 	m, err = p.Run()

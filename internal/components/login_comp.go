@@ -36,10 +36,10 @@ type LoginModel struct {
 	focused 	int
 	err			error
 	UserID		uuid.UUID
+	Username	string
 }
 
 func InitLoginModel() LoginModel {
-	// Possibly add a password feature?
 	var inputs []textinput.Model = make([]textinput.Model, 1)
 	inputs[username] = textinput.New()
 	inputs[username].Placeholder = "How would you like to be referred?"
@@ -49,6 +49,7 @@ func InitLoginModel() LoginModel {
 		inputs:		inputs,
 		focused:	0,
 		err:		nil,
+		Username:	inputs[username].Value(),
 	}
 }
 
@@ -114,8 +115,9 @@ func (m *LoginModel) prevInput() {
 	}
 }
 
-func (m *LoginModel) LoginValidator(name string) (error) {
+func (m *LoginModel) LoginValidator() (error) {
 	q := db.Queries{}
+	name := m.Username
 	if name == "" {
 		return fmt.Errorf("username cannot be empty")
 	}
