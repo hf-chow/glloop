@@ -45,7 +45,6 @@ func InitLoginModel() LoginModel {
 	inputs[username].Placeholder = "How would you like to be referred?"
 	inputs[username].Focus()
 	inputs[username].Prompt = ""
-	inputs[username].Validate = LoginValidator
 	return LoginModel {
 		inputs:		inputs,
 		focused:	0,
@@ -118,19 +117,19 @@ func (m *LoginModel) prevInput() {
 func (m *LoginModel) LoginValidator(name string) (error) {
 	q := db.Queries{}
 	if name == "" {
-		return uuid.UUID{}, fmt.Errorf("username cannot be empty")
+		return fmt.Errorf("username cannot be empty")
 	}
 
 	exists, err := q.UsernameExists(context.Background(), name)
 	if err != nil {
-		return uuid.UUID{}, fmt.Errorf("error when checking if username exists: %w", err)
+		return fmt.Errorf("error when checking if username exists: %w", err)
 	}
 
 	var userID uuid.UUID
 	if exists {
 		userID, err = q.GetIDByUsername(context.Background(), name)
 		if err != nil {
-			return uuid.UUID{}, fmt.Errorf("error when retrieving userID: %w", err)
+			return fmt.Errorf("error when retrieving userID: %w", err)
 		}
 	} else {
 		userID = uuid.New()
@@ -142,7 +141,7 @@ func (m *LoginModel) LoginValidator(name string) (error) {
 		}
 		_, err := q.CreateUser(context.Background(), userArgs)
 		if err != nil {
-			return uuid.UUID{}, fmt.Errorf("error when creating new user: %w", err)
+			return fmt.Errorf("error when creating new user: %w", err)
 		}
 	}
 	return nil
