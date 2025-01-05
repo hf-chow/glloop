@@ -87,7 +87,7 @@ func (q *Queries) GetUsernameByID(ctx context.Context, id uuid.UUID) (string, er
 
 const usernameExists = `-- name: UsernameExists :one
 SELECT EXISTS (
-    SELECT COUNT(1)
+    SELECT 1
     FROM users
     WHERE name = $1
 ) AS exists

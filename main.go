@@ -51,8 +51,8 @@ func main() {
 	}
 
 	err = loginModel.LoginValidator(*state.DB)
-	if !ok {
-		fmt.Println("Error: login cannot be validated")
+	if err != nil {
+		fmt.Printf("Error: %s", err)
 	}
 
 	userID := loginModel.UserID
