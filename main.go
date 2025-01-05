@@ -50,7 +50,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = loginModel.LoginValidator()
+	err = loginModel.LoginValidator(*state.DB)
 	if !ok {
 		fmt.Println("Error: login cannot be validated")
 	}

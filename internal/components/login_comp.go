@@ -115,8 +115,7 @@ func (m *LoginModel) prevInput() {
 	}
 }
 
-func (m *LoginModel) LoginValidator() (error) {
-	q := db.Queries{}
+func (m *LoginModel) LoginValidator(q db.Queries) (error) {
 	name := m.Username
 	if name == "" {
 		return fmt.Errorf("username cannot be empty")
