@@ -9,8 +9,9 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
 
-	db "github.com/hf-chow/glloop/internal/database"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/hf-chow/glloop/internal/config"
+	db "github.com/hf-chow/glloop/internal/database"
 )
 
 type (
@@ -31,12 +32,18 @@ var (
 	continueStyle = lipgloss.NewStyle().Foreground(darkGray)
 )
 
+type LoginModelState struct {
+	Config 	*config.Config
+	DB		*db.Queries
+}
+
 type LoginModel struct {
 	inputs 		[]textinput.Model
 	focused 	int
 	err			error
 	UserID		uuid.UUID
 	Username	string
+	State		*LoginModelState
 }
 
 func InitLoginModel() LoginModel {
@@ -116,7 +123,7 @@ func (m *LoginModel) prevInput() {
 }
 
 func (m *LoginModel) LoginValidator(q db.Queries) (error) {
-	name := m.Username
+	name := m.State.Config.CurrentUsername
 	if name == "" {
 		return fmt.Errorf("username cannot be empty")
 	}

@@ -28,14 +28,14 @@ func main() {
 	if err != nil {
 		fmt.Printf("error when reading config: %v\n", err)
 	}
-	state := &chat.State{Config: &cfg}
+	historyModelState := &chat.State{Config: &cfg}
 
 	dbtx, err := sql.Open("postgres", cfg.DBURL)
 	if err != nil {
 		log.Fatal("fail to connect to DB")
 	}
 	dbQueries := db.New(dbtx)
-	state.DB = dbQueries
+	loginModelState := &comp.LoginModelState{Config: &cfg} 
 
 	p := tea.NewProgram(comp.InitLoginModel())
 	m, err := p.Run()
@@ -50,7 +50,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = loginModel.LoginValidator(*state.DB)
+	err = loginModel.LoginValidator(*loginModelState.DB)
 	if err != nil {
 		fmt.Printf("Error: %s", err)
 	}
@@ -70,11 +70,11 @@ func main() {
 	}
 
 	if historyModel.Choice == "Yes" {
-		historyModel.ClearHistory(*state.DB, userID)
+		historyModel.ClearHistory(*historyModelState.DB, userID)
 	}
 
 	p = tea.NewProgram(
-		chat.InitModel(userID, state),
+		chat.InitModel(userID, historyModelState),
 		tea.WithMouseCellMotion(),
 	)
 	if _, err := p.Run(); err != nil {
