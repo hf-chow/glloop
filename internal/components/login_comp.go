@@ -74,6 +74,7 @@ func (m LoginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.focused == len(m.inputs)-1 {
 				return m, tea.Quit
 			}
+			m.Login()
 			m.nextInput()
 		case tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
@@ -122,22 +123,23 @@ func (m *LoginModel) prevInput() {
 	}
 }
 
-func (m *LoginModel) LoginValidator(q db.Queries) (error) {
+func (m *LoginModel) Login() {
+	q := m.State.DB
 	name := m.State.Config.CurrentUsername
 	if name == "" {
-		return fmt.Errorf("username cannot be empty")
+		fmt.Print("username cannot be empty")
 	}
 
 	exists, err := q.UsernameExists(context.Background(), name)
 	if err != nil {
-		return fmt.Errorf("error when checking if username exists: %w", err)
+		fmt.Printf("error when checking if username exists: %s", err)
 	}
 
 	var userID uuid.UUID
 	if exists {
 		userID, err = q.GetIDByUsername(context.Background(), name)
 		if err != nil {
-			return fmt.Errorf("error when retrieving userID: %w", err)
+			fmt.Printf("error when retrieving userID: %s", err)
 		}
 	} else {
 		userID = uuid.New()
@@ -149,8 +151,7 @@ func (m *LoginModel) LoginValidator(q db.Queries) (error) {
 		}
 		_, err := q.CreateUser(context.Background(), userArgs)
 		if err != nil {
-			return fmt.Errorf("error when creating new user: %w", err)
+			fmt.Printf("error when creating new user: %s", err)
 		}
 	}
-	return nil
 }
