@@ -1,9 +1,7 @@
 package components
 
 import (
-	"context"
 	"fmt"
-	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
@@ -74,14 +72,8 @@ func (m LoginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.focused == len(m.inputs)-1 {
 				return m, tea.Quit
 			}
-			m.Login()
-			m.nextInput()
 		case tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
-		case tea.KeyShiftTab, tea.KeyCtrlP:
-			m.prevInput()
-		case tea.KeyTab, tea.KeyCtrlN:
-			m.nextInput()
 		}
 		for i := range m.inputs {
 			m.inputs[i].Blur()
@@ -110,48 +102,4 @@ func (m LoginModel) View() string {
 		m.inputs[username].View(),
 		continueStyle.Render("Press Enter to continue"),
 	) + "\n"
-}
-
-func (m *LoginModel) nextInput() {
-	m.focused = (m.focused + 1) % len(m.inputs)
-}
-
-func (m *LoginModel) prevInput() {
-	m.focused--
-	if m.focused < 0 {
-		m.focused = len(m.inputs) - 1
-	}
-}
-
-func (m *LoginModel) Login() {
-	q := m.State.DB
-	name := m.State.Config.CurrentUsername
-	if name == "" {
-		fmt.Print("username cannot be empty")
-	}
-
-	exists, err := q.UsernameExists(context.Background(), name)
-	if err != nil {
-		fmt.Printf("error when checking if username exists: %s", err)
-	}
-
-	var userID uuid.UUID
-	if exists {
-		userID, err = q.GetIDByUsername(context.Background(), name)
-		if err != nil {
-			fmt.Printf("error when retrieving userID: %s", err)
-		}
-	} else {
-		userID = uuid.New()
-		userArgs := db.CreateUserParams{
-			ID:        userID,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      name,
-		}
-		_, err := q.CreateUser(context.Background(), userArgs)
-		if err != nil {
-			fmt.Printf("error when creating new user: %s", err)
-		}
-	}
 }
