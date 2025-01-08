@@ -1,7 +1,9 @@
 package components
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
@@ -102,4 +104,36 @@ func (m LoginModel) View() string {
 		m.inputs[username].View(),
 		continueStyle.Render("Press Enter to continue"),
 	) + "\n"
+}
+
+
+func (m *LoginModel) Login(q db.Queries, username string) {
+	if username == "" {
+		fmt.Print("username cannot be empty")
+	}
+
+	exists, err := q.UsernameExists(context.Background(), username)
+	if err != nil {
+		fmt.Printf("error when checking if username exists: %s", err)
+	}
+
+	var userID uuid.UUID
+	if exists {
+		userID, err = q.GetIDByUsername(context.Background(), username)
+		if err != nil {
+			fmt.Printf("error when retrieving userID: %s", err)
+		}
+	} else {
+		userID = uuid.New()
+		userArgs := db.CreateUserParams{
+			ID:        userID,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			Name:      username,
+		}
+		_, err := q.CreateUser(context.Background(), userArgs)
+		if err != nil {
+			fmt.Printf("error when creating new user: %s", err)
+		}
+	}
 }
