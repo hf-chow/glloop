@@ -19,7 +19,7 @@ SELECT name FROM users WHERE id = $1 LIMIT 1;
 
 -- name: UsernameExists :one
 SELECT EXISTS (
-    SELECT 1
+    SELECT 2
     FROM users
     WHERE name = $1
 ) AS exists;

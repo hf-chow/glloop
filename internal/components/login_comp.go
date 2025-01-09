@@ -56,7 +56,6 @@ func InitLoginModel() LoginModel {
 		inputs:		inputs,
 		focused:	0,
 		err:		nil,
-		Username:	inputs[username].Value(),
 	}
 }
 
@@ -72,6 +71,7 @@ func (m LoginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Type {
 		case tea.KeyEnter:
 			if m.focused == len(m.inputs)-1 {
+				m.Username = m.inputs[username].Value()
 				return m, tea.Quit
 			}
 		case tea.KeyCtrlC, tea.KeyEsc:
@@ -107,21 +107,21 @@ func (m LoginModel) View() string {
 }
 
 
-func (m *LoginModel) Login(q db.Queries, username string) {
+func (m LoginModel) Login(q db.Queries, username string) (uuid.UUID, error) {
 	if username == "" {
-		fmt.Print("username cannot be empty")
+		return uuid.UUID{}, fmt.Errorf("username cannot be empty")
 	}
 
 	exists, err := q.UsernameExists(context.Background(), username)
 	if err != nil {
-		fmt.Printf("error when checking if username exists: %s", err)
+		return uuid.UUID{}, fmt.Errorf("error when checking if username exists: %s", err)
 	}
 
 	var userID uuid.UUID
 	if exists {
 		userID, err = q.GetIDByUsername(context.Background(), username)
 		if err != nil {
-			fmt.Printf("error when retrieving userID: %s", err)
+			return uuid.UUID{}, fmt.Errorf("error when retrieving userID: %s", err)
 		}
 	} else {
 		userID = uuid.New()
@@ -133,7 +133,8 @@ func (m *LoginModel) Login(q db.Queries, username string) {
 		}
 		_, err := q.CreateUser(context.Background(), userArgs)
 		if err != nil {
-			fmt.Printf("error when creating new user: %s", err)
+			return uuid.UUID{}, fmt.Errorf("error when creating new user: %s", err)
 		}
 	}
+	return userID, nil
 }

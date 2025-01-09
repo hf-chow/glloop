@@ -50,7 +50,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	userID := loginModel.UserID
+	username := loginModel.Username
+	userID, err := loginModel.Login(*state.DB, username)
+
+	if err != nil {
+		fmt.Printf("error logging in user: %v", err)
+		os.Exit(1)
+	}
+
 	p = tea.NewProgram(comp.HistoryModel{})
 	m, err = p.Run()
 	if err != nil {
