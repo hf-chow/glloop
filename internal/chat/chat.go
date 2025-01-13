@@ -184,7 +184,6 @@ func (m *Model) BotReply(msg BotResponseMsg) {
 func (m *Model) WaitForResponse() tea.Cmd {
 	return func() tea.Msg {
 		response := <-m.responseCh
-		//		fmt.Println("Got response:", response)
 		return BotResponseMsg(response)
 	}
 }

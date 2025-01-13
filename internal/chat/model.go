@@ -67,6 +67,7 @@ func InitModel(userID uuid.UUID, s *State) Model {
 	ta.ShowLineNumbers = false
 	vp := viewport.New(100, 20)
 	vp.SetContent(`You are in the chat room. Type a message and press Enter to send.`)
+	vp.MouseWheelEnabled = true
 	ta.KeyMap.InsertNewline.SetEnabled(false)
 	return Model{
 		textarea:		ta,
@@ -103,6 +104,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Send(v)
 			m.textarea.Reset()
 			return m, m.WaitForResponse()
+		case "ctrl+s":
+			m.textarea.Blur()
+			return m, nil
+		case "ctrl+f":
+			m.textarea.Focus()
+			return m, nil
 		default:
 			var cmd tea.Cmd
 			m.textarea, cmd = m.textarea.Update(msg)
