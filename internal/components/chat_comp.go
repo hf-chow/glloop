@@ -42,7 +42,7 @@ func (m ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if k := msg.String(); k == "ctrl+c" || k == "q" || k == "esc" {
+		if k := msg.String(); k == "ctrl+c" || k == "q" || k == "esc" || k == "enter" {
 			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:
