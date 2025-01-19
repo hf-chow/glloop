@@ -77,8 +77,6 @@ func main() {
 
 	p = tea.NewProgram(
 		chat.InitModel(userID, state),
-		tea.WithAltScreen(),
-		tea.WithMouseCellMotion(),
 	)
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
