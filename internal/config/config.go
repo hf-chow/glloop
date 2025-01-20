@@ -9,6 +9,7 @@ import (
 type Config struct {
 	DBURL				string
 	CurrentUsername		string
+	HuggingFaceToken	string
 }
 
 const configFilename = ".glloopconfig.json"
