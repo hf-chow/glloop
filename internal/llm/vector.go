@@ -17,6 +17,8 @@ type Huggingface struct {
 	BatchSize 		int
 }
 
+func getHuggingFaceEmbeddingModel() {}
+
 func getVectorStore() (vectorstores.VectorStore, error) {
 
 	model := "llama3.2"
