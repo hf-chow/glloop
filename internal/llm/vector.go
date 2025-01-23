@@ -41,3 +41,16 @@ func getVectorStore(model string) (vectorstores.VectorStore, error) {
 	)
 	return vstore, nil
 }
+
+func embedDoc(texts []string, embeddingModelName string) ([][]float32, error) {
+	model, err := getEmbeddingModel(embeddingModelName)
+	if err != nil {
+		return [][]float32{}, err
+	}
+
+	vector, err := model.EmbedDocuments(context.Background(), texts)
+	if err != nil {
+		return [][]float32{}, err
+	}
+	return vector, nil
+}
