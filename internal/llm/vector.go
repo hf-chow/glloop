@@ -2,7 +2,6 @@ package llm
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hf-chow/glloop/internal/config"
 	emb "github.com/tmc/langchaingo/embeddings/huggingface"
@@ -10,32 +9,35 @@ import (
 	"github.com/tmc/langchaingo/vectorstores/pgvector"
 )
 
-type Huggingface struct {
-	Model 			string
-	Task 			string
-	StripNewLines 	bool
-	BatchSize 		int
+
+const defaultModel = "sentence-transformers/all-mpnet-base-v2"
+
+func getEmbeddingModel(model string) (*emb.Huggingface, error) {
+	embeddingModel, err := emb.NewHuggingface()
+	if err != nil {
+		return nil, err
+	}
+	embeddingModel.Model = model
+
+	return embeddingModel, nil
+
 }
 
-func getHuggingFaceEmbeddingModel() {}
-
-func getVectorStore() (vectorstores.VectorStore, error) {
-
-	model := "llama3.2"
-
+func getVectorStore(model string) (vectorstores.VectorStore, error) {
 	cfg, err := config.ReadConfig()
 	if err != nil {
-		fmt.Printf("error when reading config: %v\n", err)
+		return nil, err
 	}
 
-	embeddingsModel, err := emb.NewHuggingface()
-	embeddingsModel.Model = model
+	embeddingModel, err := getEmbeddingModel(model)
+	if err !=nil {
+		return nil, err
+	}
 
 	vstore, err := pgvector.New(
 		context.Background(),
 		pgvector.WithConnectionURL(cfg.DBURL),
-		pgvector.WithEmbedder(embeddingsModel),
+		pgvector.WithEmbedder(embeddingModel),
 	)
 	return vstore, nil
 }
-
