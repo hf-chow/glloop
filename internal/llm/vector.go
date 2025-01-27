@@ -2,10 +2,13 @@ package llm
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/hf-chow/glloop/internal/config"
+	"github.com/tmc/langchaingo/documentloaders"
 	emb "github.com/tmc/langchaingo/embeddings/huggingface"
 	"github.com/tmc/langchaingo/schema"
+	"github.com/tmc/langchaingo/textsplitter"
 	"github.com/tmc/langchaingo/vectorstores"
 	"github.com/tmc/langchaingo/vectorstores/pgvector"
 )
@@ -63,4 +66,22 @@ func addToVectorStore(docs []schema.Document, model string) error {
 	}
 	_, err = vstore.AddDocuments(context.Background(), docs)
 	return nil
+}
+
+func getDocsFromUrl(src string) ([]schema.Document, error) {
+	resp, err := http.Get(src)
+	if err != nil {
+		return []schema.Document{}, err
+	}
+
+	defer resp.Body.Close()
+
+	docs, err := documentloaders.NewHTML(resp.Body).LoadAndSplit(
+		context.Background(), textsplitter.NewRecursiveCharacter(),
+	)
+	if err != nil {
+		return []schema.Document{}, err
+	}
+
+	return docs, nil
 }
