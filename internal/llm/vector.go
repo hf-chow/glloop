@@ -5,6 +5,7 @@ import (
 
 	"github.com/hf-chow/glloop/internal/config"
 	emb "github.com/tmc/langchaingo/embeddings/huggingface"
+	"github.com/tmc/langchaingo/schema"
 	"github.com/tmc/langchaingo/vectorstores"
 	"github.com/tmc/langchaingo/vectorstores/pgvector"
 )
@@ -53,4 +54,13 @@ func embedDoc(texts []string, embeddingModelName string) ([][]float32, error) {
 		return [][]float32{}, err
 	}
 	return vector, nil
+}
+
+func addToVectorStore(docs []schema.Document, model string) error {
+	vstore, err := getVectorStore(model)
+	if err != nil {
+		return err
+	}
+	_, err = vstore.AddDocuments(context.Background(), docs)
+	return nil
 }
